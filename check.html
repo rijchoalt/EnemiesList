@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sheldon's Enemies List</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #ab0054;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .enemy-card {
+      background: #fff;
+      padding: 10px 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Super Secret Enemies List 🔥 🔥 🔥</h1>
+
+  <div class="input-group">
+    <input id="enemyInput" type="text" placeholder="Enter name of enemy" />
+    <button onclick="addEnemy()">Add</button>
+  </div>
+
+  <div id="enemyList"></div>
+
+  <script>
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyBzvVbH96QBMNbV_AdC9PnhITAKqvHxMxE",
+  authDomain: "enemies-list.firebaseapp.com",
+  projectId: "enemies-list",
+  storageBucket: "enemies-list.firebasestorage.app",
+  messagingSenderId: "773115163887",
+  appId: "1:773115163887:web:84d9e5330e94f14befd71a",
+  measurementId: "G-JK15K6JCN1"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const enemiesRef = db.collection("enemies");
+
+    function renderEnemy(doc) {
+      const card = document.createElement("div");
+      card.className = "enemy-card";
+
+      const name = document.createElement("div");
+      name.innerHTML = `<strong>${doc.data().name}</strong><br>Severity: ${doc.data().severity}`;
+
+      const controls = document.createElement("div");
+
+      const plus = document.createElement("button");
+      plus.textContent = "+";
+      plus.onclick = () => {
+        enemiesRef.doc(doc.id).update({ severity: doc.data().severity + 1 });
+      };
+
+      const minus = document.createElement("button");
+      minus.textContent = "−";
+      minus.onclick = () => {
+        if (doc.data().severity > 1) {
+          enemiesRef.doc(doc.id).update({ severity: doc.data().severity - 1 });
+        }
+      };
+
+      const del = document.createElement("button");
+      del.textContent = "🗑️";
+      del.onclick = () => enemiesRef.doc(doc.id).delete();
+
+      controls.appendChild(plus);
+      controls.appendChild(minus);
+      controls.appendChild(del);
+
+      card.appendChild(name);
+      card.appendChild(controls);
+
+      document.getElementById("enemyList").appendChild(card);
+    }
+
+    function addEnemy() {
+      const input = document.getElementById("enemyInput");
+      const name = input.value.trim();
+      if (name) {
+        enemiesRef.add({ name, severity: 1 });
+        input.value = "";
+      }
+    }
+
+    // Real-time listener
+    enemiesRef.orderBy("name").onSnapshot(snapshot => {
+      const list = document.getElementById("enemyList");
+      list.innerHTML = "";
+      snapshot.forEach(doc => renderEnemy(doc));
+    });
+  </script>
+</body>
+</html>
